@@ -84,6 +84,19 @@ const rotationStates = {};
 
 // Create Planet Function
 function createPlanet(size, texture, distance, speed, ring) {
+   
+    const orbitgeo = new THREE.RingGeometry(
+        distance, distance+0.1, 35
+    )
+    const orbitmat = new THREE.MeshBasicMaterial({color:0xffffff})
+    const orbit = new THREE.Mesh(orbitgeo, orbitmat);
+    orbit.rotation.x =  -0.5 * Math.PI;
+    const loader = new THREE.TextureLoader();
+    const Texture = loader.load(texture);
+    Texture.colorSpace = THREE.SRGBColorSpace;
+
+    
+
     const geo = new THREE.SphereGeometry(size, 30, 30);
     const mat = new THREE.MeshStandardMaterial({ 
         map: texture,
@@ -93,6 +106,7 @@ function createPlanet(size, texture, distance, speed, ring) {
     const mesh = new THREE.Mesh(geo, mat);
     const obj = new THREE.Object3D();
     obj.add(mesh);
+    obj.add(orbit);
 
     if (ring) {
         const ringGeo = new THREE.RingGeometry(ring.innerRadius, ring.outerRadius, 32);
@@ -102,6 +116,8 @@ function createPlanet(size, texture, distance, speed, ring) {
         ringMesh.position.x = distance; 
         obj.add(ringMesh); 
     }
+
+    
 
     mesh.position.x = distance; 
     scene.add(obj);
@@ -256,4 +272,96 @@ window.addEventListener('resize', function() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+});
+// Information boxes
+const infoBox = document.createElement('div');
+infoBox.style.position = 'absolute';
+infoBox.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+infoBox.style.color = 'white';
+infoBox.style.padding = '10px';
+infoBox.style.borderRadius = '5px';
+infoBox.style.display = 'none';
+document.body.appendChild(infoBox);
+
+// Fetch planet information from API
+async function fetchPlanetInfo(planetName) {
+  const response = await fetch(`https://planets-api.vercel.app/api/v1/planets/${planetName}`);
+  const data = await response.json();
+  console.log(data);
+  return data;
+}
+
+// Show information box
+function showInfoBox(planet, event) {
+    fetchPlanetInfo(planet).then(data => {
+      // Set the innerHTML content with planet information
+      infoBox.innerHTML = `
+        <h3>${data.name}</h3>
+        <p>Brief: ${data.overview.content}</p>
+        <p>Radius: ${data.radius}</p>
+        <p>Revolution: ${data.revolution}</p>
+        <p>Rotation: ${data.rotation}</p>
+        <p>Temperature: ${data.temperature}</p>
+      `;
+  
+      // Apply CSS styles directly in the JavaScript
+      infoBox.style.position = 'fixed';
+      infoBox.style.display = 'flex';
+      infoBox.style.flexDirection = 'column';
+      infoBox.style.alignItems = 'center';
+      infoBox.style.justifyContent = 'center';
+      infoBox.style.gap = '10px';
+
+      infoBox.style.top = '0'; // Start at the top of the page
+      infoBox.style.left = '0'; // Align to the left of the viewport
+      infoBox.style.width = '25%'; // Width of the info box
+      infoBox.style.height = '100vh'; // Full height of the viewport
+      infoBox.style.padding = '20px';
+      infoBox.style.backgroundColor = 'rgba(0, 0, 0, 0.9)'; // Dark transparent background
+      infoBox.style.color = '#fff'; // White text color
+      infoBox.style.borderRadius = '0'; // No border radius for full-height design
+      infoBox.style.fontFamily = 'Orbitron, sans-serif';
+      infoBox.style.fontSize = '14px';
+      infoBox.style.boxShadow = '2px 0 10px rgba(0, 0, 0, 0.5)'; // Shadow on the right
+      infoBox.style.zIndex = '1000'; // Make sure it appears above other elements
+      infoBox.style.overflowY = 'auto'; // Enable vertical scrolling if content overflows
+      
+    });
+  }
+  
+
+// Hide information box
+function hideInfoBox() {
+  infoBox.style.display = 'none';
+}
+
+// Update click event to show information box
+window.addEventListener('click', (event) => {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(planets.map(p => p.mesh));
+
+  if (intersects.length > 0) {
+    const clickedPlanet = intersects[0].object;
+
+    // Toggle rotation state
+    rotationStates[clickedPlanet.uuid] = !rotationStates[clickedPlanet.uuid];
+
+    // Set target planet for the camera to follow
+    targetPlanet = planets.find(p => p.mesh.uuid === clickedPlanet.uuid);
+    isFollowingPlanet = true;
+
+    // Disable OrbitControls while following the planet
+    orbit.enabled = false;
+
+    // Show the reset button
+    resetButton.style.display = 'block';
+
+    // Show information box
+    showInfoBox(targetPlanet.texture.image.currentSrc.split('/').pop().split('.')[0], event);
+  } else {
+    hideInfoBox();
+  }
 });

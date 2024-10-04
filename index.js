@@ -130,23 +130,25 @@ function createPlanet(size, texture, distance, speed, ring) {
 }
 
 // Create Planets with unique distances and speeds
-const mercury = createPlanet(2, mercuryTexture, 28, 0.005);
-const venus = createPlanet(4, venusTexture, 44, 0.0035);
-const earth = createPlanet(4.5, earthTexture, 62, 0.003);
-const mars = createPlanet(3, marsTexture, 78, 0.0028);
-const jupiter = createPlanet(8, jupiterTexture, 100, 0.0025);
-const saturn = createPlanet(6, saturnTexture, 138, 0.0022, {
+const mercury = createPlanet(2, mercuryTexture, 28, 0.05);
+const venus = createPlanet(4, venusTexture, 44, 0.035);
+const earth = createPlanet(4.5, earthTexture, 62, 0.03);
+const mars = createPlanet(3, marsTexture, 78, 0.028);
+const jupiter = createPlanet(8, jupiterTexture, 100, 0.025);
+const saturn = createPlanet(6, saturnTexture, 138, 0.022, {
     innerRadius: 7,
     outerRadius: 12,
     texture: saturnRingTexture
 });
-const uranus = createPlanet(5, uranusTexture, 176, 0.0020, {
+const uranus = createPlanet(5, uranusTexture, 176, 0.020, {
     innerRadius: 4,
     outerRadius: 9,
     texture: uranusRingTexture
 });
-const neptune = createPlanet(5, neptuneTexture, 200, 0.0018);
-const pluto = createPlanet(2, plutoTexture, 216, 0.0015);
+const neptune = createPlanet(5, neptuneTexture, 200, 0.018);
+const pluto = createPlanet(2, plutoTexture, 216, 0.015);
+
+
 
 // Raycaster and Mouse for detecting clicks
 const raycaster = new THREE.Raycaster();
@@ -309,48 +311,113 @@ async function fetchPlanetInfo(planetName) {
   return data;
 }
 
-// Show information box
-function showInfoBox(planet, event) {
-    fetchPlanetInfo(planet).then(data => {
+const planetNames = [
+  'mercury', 
+  'venus', 
+  'earth', 
+  'mars', 
+  'jupiter', 
+  'saturn', 
+  'uranus', 
+  'neptune', 
+  'pluto'
+];
+
+
+// Show information box for a specific planet
+function showInfoBox(planet) {
+  // Fetch planet information
+  fetchPlanetInfo(planet).then(data => {
+      // Determine the index of the current planet
+      const currentIndex = planetNames.indexOf(planet);
+      
       // Set the innerHTML content with planet information
       infoBox.innerHTML = `
-        <h3>${data.name}</h3>
-        <p>Brief: ${data.overview.content}</p>
-        <p>Radius: ${data.radius}</p>
-        <p>Revolution: ${data.revolution}</p>
-        <p>Rotation: ${data.rotation}</p>
-        <p>Temperature: ${data.temperature}</p>
+          <style>
+              /* Info box navigation styles */
+              .info-navigation {
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  width: 100%;
+                  margin-bottom: 20px;
+                  font-family: 'Orbitron', sans-serif;
+              }
+              .planet-name {
+                  font-size: 18px;
+                  font-weight: bold;
+                  text-align: center;
+                  flex: 1; /* Allow the planet name to grow */
+              }
+              .arrow {
+                  font-size: 24px; /* Adjust size of the arrows */
+                  cursor: pointer;
+                  padding: 10px;
+                  transition: color 0.3s;
+              }
+              .arrow:hover {
+                  font-size: 28px; /* Increase size on hover */
+                  color: yellow; /* Change color on hover */
+              }
+          </style>
+          <div class="info-navigation">
+              <span id="prevPlanet" class="arrow">&larr;</span>
+              <div class="planet-name">${data.name}</div>
+              <span id="nextPlanet" class="arrow">&rarr;</span>
+          </div>
+          <p>Brief: ${data.overview.content}</p>
+          <p>Radius: ${data.radius}</p>
+          <p>Revolution: ${data.revolution}</p>
+          <p>Rotation: ${data.rotation}</p>
+          <p>Temperature: ${data.temperature}</p>
       `;
-  
-      // Apply CSS styles directly in the JavaScript
+
+      // Apply CSS styles for the info box
       infoBox.style.position = 'fixed';
       infoBox.style.display = 'flex';
       infoBox.style.flexDirection = 'column';
       infoBox.style.alignItems = 'center';
       infoBox.style.justifyContent = 'center';
       infoBox.style.gap = '10px';
-
-      infoBox.style.top = '0'; // Start at the top of the page
-      infoBox.style.left = '0'; // Align to the left of the viewport
-      infoBox.style.width = '25%'; // Width of the info box
-      infoBox.style.height = '100vh'; // Full height of the viewport
+      infoBox.style.top = '0';
+      infoBox.style.left = '0';
+      infoBox.style.width = '25%';
+      infoBox.style.height = '100vh';
       infoBox.style.padding = '20px';
-      infoBox.style.backgroundColor = 'rgba(0, 0, 0, 0.9)'; // Dark transparent background
-      infoBox.style.color = '#fff'; // White text color
-      infoBox.style.borderRadius = '0'; // No border radius for full-height design
+      infoBox.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+      infoBox.style.color = '#fff';
       infoBox.style.fontFamily = 'Orbitron, sans-serif';
       infoBox.style.fontSize = '14px';
-      infoBox.style.boxShadow = '2px 0 10px rgba(0, 0, 0, 0.5)'; // Shadow on the right
-      infoBox.style.zIndex = '1000'; // Make sure it appears above other elements
-      infoBox.style.overflowY = 'auto'; // Enable vertical scrolling if content overflows
-      
-    });
-  }
-  
+      infoBox.style.boxShadow = '2px 0 10px rgba(0, 0, 0, 0.5)';
+      infoBox.style.zIndex = '1000';
+      infoBox.style.overflowY = 'auto';
+
+      // Add click event for previous planet
+      const prevPlanetButton = document.getElementById('prevPlanet');
+      prevPlanetButton.onclick = () => {
+          const prevIndex = (currentIndex - 1 + planetNames.length) % planetNames.length; // Loop back to the last planet
+          showInfoBox(planetNames[prevIndex]); // Call showInfoBox with the previous planet name
+          targetPlanet = planets[prevIndex];
+          followPlanet(targetPlanet);
+      };
+
+      // Add click event for next planet
+      const nextPlanetButton = document.getElementById('nextPlanet');
+      nextPlanetButton.onclick = () => {
+          const nextIndex = (currentIndex + 1) % planetNames.length; // Loop back to the first planet
+          showInfoBox(planetNames[nextIndex]); // Call showInfoBox with the next planet name
+          targetPlanet = planets[nextIndex];
+          followPlanet(planets[nextIndex]);
+
+      };
+  });
+}
+
+
 
 // Hide information box
 function hideInfoBox() {
-  infoBox.style.display = 'none';
+  infoBox.style.display? infoBox.style.display = 'none' : infoBox.style.display = 'block';
 }
 
 // Update click event to show information box

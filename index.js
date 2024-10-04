@@ -130,23 +130,23 @@ function createPlanet(size, texture, distance, speed, ring) {
 }
 
 // Create Planets with unique distances and speeds
-const mercury = createPlanet(2, mercuryTexture, 28, 0.05);
-const venus = createPlanet(4, venusTexture, 44, 0.035);
-const earth = createPlanet(4.5, earthTexture, 62, 0.03);
-const mars = createPlanet(3, marsTexture, 78, 0.028);
-const jupiter = createPlanet(8, jupiterTexture, 100, 0.025);
-const saturn = createPlanet(6, saturnTexture, 138, 0.022, {
+const mercury = createPlanet(2, mercuryTexture, 28, 0.005);
+const venus = createPlanet(4, venusTexture, 44, 0.0035);
+const earth = createPlanet(4.5, earthTexture, 62, 0.003);
+const mars = createPlanet(3, marsTexture, 78, 0.0028);
+const jupiter = createPlanet(8, jupiterTexture, 100, 0.0025);
+const saturn = createPlanet(6, saturnTexture, 138, 0.0022, {
     innerRadius: 7,
     outerRadius: 12,
     texture: saturnRingTexture
 });
-const uranus = createPlanet(5, uranusTexture, 176, 0.020, {
+const uranus = createPlanet(5, uranusTexture, 176, 0.0020, {
     innerRadius: 4,
     outerRadius: 9,
     texture: uranusRingTexture
 });
-const neptune = createPlanet(5, neptuneTexture, 200, 0.018);
-const pluto = createPlanet(2, plutoTexture, 216, 0.015);
+const neptune = createPlanet(5, neptuneTexture, 200, 0.0018);
+const pluto = createPlanet(2, plutoTexture, 216, 0.0015);
 
 // Raycaster and Mouse for detecting clicks
 const raycaster = new THREE.Raycaster();
@@ -220,8 +220,26 @@ window.addEventListener('click', (event) => {
 
         // Show the reset button
         resetButton.style.display = 'block';
+        resetButton.style.zIndex = '1000';
+        resetButton.style.borderRadius = '5px';
+        resetButton.style.padding = '10px';
+        resetButton.style.fontFamily = 'Orbitron, sans-serif';
+
+        
     }
 });
+
+resetButton.addEventListener('mouseover', () => {
+    resetButton.style.backgroundColor = '#555'; // Change background color
+    resetButton.style.color = 'yellow'; // Change text color
+    resetButton.style.transform = 'scale(1.1)'; // Slightly increase size
+  });
+  
+  resetButton.addEventListener('mouseout', () => {
+    resetButton.style.backgroundColor = '#333'; // Reset background color
+    resetButton.style.color = 'white'; // Reset text color
+    resetButton.style.transform = 'scale(1)'; // Reset size
+  });
 
 window.addEventListener('click', (event) => {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;

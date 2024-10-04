@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from 'jsm/controls/OrbitControls.js';
-import { fetchLimitedData } from './api.js';
 
+// Load textures
 const textures = [];
 const textureLoader = new THREE.TextureLoader();
 const starsTexture = textureLoader.load('./img/stars.jpg');
@@ -34,6 +34,7 @@ textures.push(
     plutoTexture
 );
 
+// Hide start menu
 const startMenu = document.getElementById('start-menu');
 const startButton = document.getElementById('start-button');
 
@@ -41,34 +42,32 @@ startButton.addEventListener('click', function() {
     startMenu.classList.add('hidden'); 
 });
 
+// Set color space for textures
 textures.forEach(function(texture) {
     texture.colorSpace = THREE.SRGBColorSpace;
 });
 
+// Initialize renderer
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+// Initialize scene and camera
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(
-    45,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000
-);
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(-200, 100, 200);
 const orbit = new OrbitControls(camera, renderer.domElement);
-camera.position.set(-200, 100, 200); // Adjusted camera position for better view
 orbit.update();
 
+// Lighting
 const ambientLight = new THREE.AmbientLight(0x333333, 5);
 scene.add(ambientLight);
 
 const pointLight = new THREE.PointLight(0xffffff, 30000, 300);
 scene.add(pointLight);
 
-// You can also add a directional light for better shadows and highlights
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5); // Adjusted intensity
-directionalLight.position.set(100, 100, 100); // Positioning it away from the planets
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+directionalLight.position.set(100, 100, 100);
 scene.add(directionalLight);
 
 scene.background = starsTexture;
@@ -79,76 +78,129 @@ const sunMat = new THREE.MeshBasicMaterial({ map: sunTexture });
 const sun = new THREE.Mesh(sunGeo, sunMat);
 scene.add(sun);
 
+// Create planets array
+const planets = [];
+const rotationStates = {};
+
 // Create Planet Function
-function createPlanet(size, texture, distance, ring) {
-  const geo = new THREE.SphereGeometry(size, 30, 30);
-  const mat = new THREE.MeshStandardMaterial({ 
-      map: texture,
-      roughness: 0.5, // Adjust roughness for realism
-      metalness: 0.1 // Adjust metalness if needed
-  });
-  const mesh = new THREE.Mesh(geo, mat);
-  const obj = new THREE.Object3D();
-  obj.add(mesh);
+function createPlanet(size, texture, distance, speed, ring) {
+    const geo = new THREE.SphereGeometry(size, 30, 30);
+    const mat = new THREE.MeshStandardMaterial({ 
+        map: texture,
+        roughness: 0.5,
+        metalness: 0.1 
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    const obj = new THREE.Object3D();
+    obj.add(mesh);
 
-  if (ring) {
-      const ringGeo = new THREE.RingGeometry(ring.innerRadius, ring.outerRadius, 32);
-      const ringMat = new THREE.MeshBasicMaterial({ map: ring.texture, side: THREE.DoubleSide });
-      const ringMesh = new THREE.Mesh(ringGeo, ringMat);
-      ringMesh.rotation.x = -0.5 * Math.PI;
-      ringMesh.position.x = distance; // Position the ring at the same distance as the planet
-      obj.add(ringMesh); // Add the ring to the planet's Object3D
-  }
+    if (ring) {
+        const ringGeo = new THREE.RingGeometry(ring.innerRadius, ring.outerRadius, 32);
+        const ringMat = new THREE.MeshBasicMaterial({ map: ring.texture, side: THREE.DoubleSide });
+        const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+        ringMesh.rotation.x = -0.5 * Math.PI;
+        ringMesh.position.x = distance; 
+        obj.add(ringMesh); 
+    }
 
-  mesh.position.x = distance; // Set distance from sun
-  scene.add(obj);
+    mesh.position.x = distance; 
+    scene.add(obj);
+    planets.push({ mesh, obj, texture, ring, speed });
 
-  return { mesh, obj };
+    // Initialize rotation state
+    rotationStates[mesh.uuid] = true;
+
+    return { mesh, obj };
 }
 
-// Create Planets
-const mercury = createPlanet(2, mercuryTexture, 28);
-const venus = createPlanet(4, venusTexture, 44);
-const earth = createPlanet(4.5, earthTexture, 62);
-const mars = createPlanet(3, marsTexture, 78);
-const jupiter = createPlanet(8, jupiterTexture, 100);
-const saturn = createPlanet(6, saturnTexture, 138, {
+// Create Planets with unique distances and speeds
+const mercury = createPlanet(2, mercuryTexture, 28, 0.05);
+const venus = createPlanet(4, venusTexture, 44, 0.035);
+const earth = createPlanet(4.5, earthTexture, 62, 0.03);
+const mars = createPlanet(3, marsTexture, 78, 0.028);
+const jupiter = createPlanet(8, jupiterTexture, 100, 0.025);
+const saturn = createPlanet(6, saturnTexture, 138, 0.022, {
     innerRadius: 7,
     outerRadius: 12,
     texture: saturnRingTexture
 });
-const uranus = createPlanet(5, uranusTexture, 176, {
+const uranus = createPlanet(5, uranusTexture, 176, 0.020, {
     innerRadius: 4,
     outerRadius: 9,
     texture: uranusRingTexture
 });
-const neptune = createPlanet(5, neptuneTexture, 200);
-const pluto = createPlanet(2, plutoTexture, 216);
+const neptune = createPlanet(5, neptuneTexture, 200, 0.018);
+const pluto = createPlanet(2, plutoTexture, 216, 0.015);
+
+// Raycaster and Mouse for detecting clicks
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let targetPlanet = null;
+let isFollowingPlanet = false; // To track if the camera is following a planet
+let followDistance = 20; // Distance the camera will stay away from the planet
+
+// Function to smoothly move camera towards target
+function followPlanet(target) {
+    const targetPosition = new THREE.Vector3();
+    target.mesh.getWorldPosition(targetPosition); // Get planet's position
+
+    // Calculate where the camera should move to (behind the planet)
+    const direction = new THREE.Vector3().subVectors(camera.position, targetPosition).normalize();
+    const followPosition = new THREE.Vector3().addVectors(targetPosition, direction.multiplyScalar(followDistance));
+
+    // Check if the camera is already close enough to the target planet
+    if (camera.position.distanceTo(followPosition) > 0.1) {
+        // Use Vector3.lerp to smoothly transition camera position
+        camera.position.lerp(followPosition, 0.05); // Smooth movement
+        camera.lookAt(targetPosition); // Make the camera look at the planet
+    } else {
+        // Stop following once the camera is close enough
+        isFollowingPlanet = false;
+        orbit.enabled = true; // Re-enable OrbitControls once camera reaches the planet
+    }
+}
+
+// Raycasting and Click Event
+window.addEventListener('click', (event) => {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(planets.map(p => p.mesh));
+
+    if (intersects.length > 0) {
+        const clickedPlanet = intersects[0].object;
+
+        // Toggle rotation state
+        rotationStates[clickedPlanet.uuid] = !rotationStates[clickedPlanet.uuid];
+
+        // Set target planet for the camera to follow
+        targetPlanet = planets.find(p => p.mesh.uuid === clickedPlanet.uuid);
+        isFollowingPlanet = true;
+
+        // Disable OrbitControls while following the planet
+        orbit.enabled = false;
+    }
+});
 
 // Animate Function
 function animate() {
-  sun.rotateY(0.004);
-  mercury.mesh.rotateY(0.004);
-  venus.mesh.rotateY(0.002);
-  earth.mesh.rotateY(0.02);
-  mars.mesh.rotateY(0.018);
-  jupiter.mesh.rotateY(0.04);
-  saturn.mesh.rotateY(0.038);
-  uranus.mesh.rotateY(0.03);
-  neptune.mesh.rotateY(0.032);
-  pluto.mesh.rotateY(0.008);
+    sun.rotateY(0.004);
 
-  mercury.obj.rotateY(0.04);
-  venus.obj.rotateY(0.015);
-  earth.obj.rotateY(0.01);
-  mars.obj.rotateY(0.008);
-  jupiter.obj.rotateY(0.002);
-  saturn.obj.rotateY(0.0009);
-  uranus.obj.rotateY(0.0004);
-  neptune.obj.rotateY(0.0001);
-  pluto.obj.rotateY(0.00007);
+    // Rotate planets with unique speeds
+    planets.forEach(planet => {
+        if (rotationStates[planet.mesh.uuid]) {
+            planet.mesh.rotateY(0.004); // Rotate the planet itself
+        }
+        planet.obj.rotateY(planet.speed); // Rotate the planet around the sun at its unique speed
+    });
 
-  renderer.render(scene, camera);
+    // Follow planet if one is selected
+    if (isFollowingPlanet && targetPlanet) {
+        followPlanet(targetPlanet);
+    }
+
+    renderer.render(scene, camera);
 }
 
 renderer.setAnimationLoop(animate);

@@ -146,7 +146,6 @@ const uranus = createPlanet(5, uranusTexture, 176, 0.020, {
     texture: uranusRingTexture
 });
 const neptune = createPlanet(5, neptuneTexture, 200, 0.018);
-const pluto = createPlanet(2, plutoTexture, 216, 0.015);
 
 
 
@@ -320,7 +319,6 @@ const planetNames = [
   'saturn', 
   'uranus', 
   'neptune', 
-  'pluto'
 ];
 
 

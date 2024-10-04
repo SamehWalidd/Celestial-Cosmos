@@ -161,6 +161,52 @@ function followPlanet(target) {
 }
 
 // Raycasting and Click Event
+const resetButton = document.createElement('button');
+resetButton.innerText = 'Reset Camera';
+resetButton.style.position = 'absolute';
+resetButton.style.backgroundColor = 'transparent';
+resetButton.style.border = '1px solid white';
+resetButton.style.color = 'white';
+resetButton.style.top = '10px';
+resetButton.style.right = '10px';
+resetButton.style.display = 'none'; // Initially hidden
+document.body.appendChild(resetButton);
+
+resetButton.addEventListener('click', () => {
+    camera.position.set(-200, 100, 200);
+    camera.lookAt(scene.position);
+    orbit.update();
+    isFollowingPlanet = false;
+    orbit.enabled = true;
+    resetButton.style.display = 'none'; // Hide the button when reset
+});
+
+// Show the reset button when following a planet
+window.addEventListener('click', (event) => {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(planets.map(p => p.mesh));
+
+    if (intersects.length > 0) {
+        const clickedPlanet = intersects[0].object;
+
+        // Toggle rotation state
+        rotationStates[clickedPlanet.uuid] = !rotationStates[clickedPlanet.uuid];
+
+        // Set target planet for the camera to follow
+        targetPlanet = planets.find(p => p.mesh.uuid === clickedPlanet.uuid);
+        isFollowingPlanet = true;
+
+        // Disable OrbitControls while following the planet
+        orbit.enabled = false;
+
+        // Show the reset button
+        resetButton.style.display = 'block';
+    }
+});
+
 window.addEventListener('click', (event) => {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;

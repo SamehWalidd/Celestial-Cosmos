@@ -1,4 +1,9 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap');
+
 #start-menu {
+    font-size: large;
+    font-family: 'Orbitron', sans-serif;
     position: absolute;
     top: 50%;
     left: 50%;
@@ -21,18 +26,21 @@ body {
 }
 
 #start-button {
+    background-color: transparent;
+    border: solid 3px white;
     padding: 10px 20px;
     font-size: 1.2em;
     cursor: pointer;
-    border: none;
-    background-color: #28a745;
+    /* border: none; */
+    /* background-color: #28a745; */
     color: white;
-    border-radius: 5px;
+    /* border-radius: 5px; */
     transition: background-color 0.3s ease;
 }
 
 #start-button:hover {
-    background-color: #218838;
+    background-color: white;
+    color: black;
 }
 
 .hidden {

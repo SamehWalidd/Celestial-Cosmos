@@ -5,7 +5,7 @@ import { fetchLimitedData } from "./api.js";
 // Load textures
 const textures = [];
 const textureLoader = new THREE.TextureLoader();
-const starsTexture = textureLoader.load('./img/stars.jpg');
+const starsTexture = textureLoader.load('./img/stars8K.jpg');
 const sunTexture = textureLoader.load('./img/sun.jpg');
 const mercuryTexture = textureLoader.load('./img/mercury.jpg');
 const venusTexture = textureLoader.load('./img/venus.jpg');

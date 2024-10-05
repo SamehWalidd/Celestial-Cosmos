@@ -728,6 +728,8 @@ placeholderOption.disabled = true;
 placeholderOption.selected = true;
 planetMenu.appendChild(placeholderOption);
 
+
+
 // Populate the dropdown menu with planet options
 planetNames.forEach((planetName, index) => {
     const option = document.createElement('option');
@@ -752,6 +754,11 @@ function handlePlanetSelection() {
 
     // Show the reset button
     resetButton.style.display = 'block';
+    resetButton.style.zIndex = '1000';
+    resetButton.style.borderRadius = '5px';
+    resetButton.style.padding = '10px';
+    resetButton.style.fontFamily = 'Orbitron, sans-serif';
+    
 
     // Show information box
     showInfoBox(planetNames[selectedIndex]);

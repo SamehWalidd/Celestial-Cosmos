@@ -237,9 +237,10 @@ resetButton.style.position = 'absolute';
 resetButton.style.backgroundColor = 'transparent';
 resetButton.style.border = '1px solid white';
 resetButton.style.color = 'white';
-resetButton.style.top = '10px';
-resetButton.style.right = '10px';
+resetButton.style.top = '60px';
+resetButton.style.right = '10px';   
 resetButton.style.display = 'none'; // Initially hidden
+resetButton.style.borderRadius = '5px';
 document.body.appendChild(resetButton);
 
 resetButton.addEventListener('click', () => {
@@ -250,6 +251,7 @@ resetButton.addEventListener('click', () => {
     orbit.enabled = true;
     resetButton.style.display = 'none'; // Hide the button when reset
 });
+    
 
 // Show the reset button when following a planet
 window.addEventListener('click', (event) => {
@@ -272,7 +274,8 @@ window.addEventListener('click', (event) => {
         // Disable OrbitControls while following the planet
         orbit.enabled = false;
 
-        // Show the reset button
+        
+        // Show the reset buttonset button
         resetButton.style.display = 'block';
         resetButton.style.zIndex = '1000';
         resetButton.style.borderRadius = '5px';
@@ -553,4 +556,219 @@ window.addEventListener('mousemove', (event) => {
     } else {
         hideAsteroidTooltip();
     }
+});
+// Create a dropdown menu for selecting view mode
+const viewMenu = document.createElement('select');
+viewMenu.style.position = 'absolute';
+viewMenu.style.top = '10px';
+viewMenu.style.left = '10px';
+viewMenu.style.zIndex = '1000';
+viewMenu.style.padding = '10px';
+viewMenu.style.fontFamily = 'Orbitron, sans-serif';
+viewMenu.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+viewMenu.style.color = 'white';
+viewMenu.style.border = '1px solid white';
+viewMenu.style.borderRadius = '5px';
+
+const optionAll = document.createElement('option');
+optionAll.value = 'all';
+optionAll.innerText = 'View All';
+viewMenu.appendChild(optionAll);
+
+const optionPlanets = document.createElement('option');
+optionPlanets.value = 'planets';
+optionPlanets.innerText = 'View Planets';
+viewMenu.appendChild(optionPlanets);
+
+const optionAsteroids = document.createElement('option');
+optionAsteroids.value = 'asteroids';
+optionAsteroids.innerText = 'View Asteroids';
+viewMenu.appendChild(optionAsteroids);
+
+document.body.appendChild(viewMenu);
+
+// Function to update visibility based on selected view mode
+function updateViewMode() {
+    const selectedMode = viewMenu.value;
+
+    if (selectedMode === 'planets') {
+        planets.forEach(planet => planet.obj.visible = true);
+        asteroids.forEach(asteroid => asteroid.visible = false);
+        sun.visible = true;
+    } else if (selectedMode === 'asteroids') {
+        planets.forEach(planet => planet.obj.visible = false);
+        asteroids.forEach(asteroid => asteroid.visible = true);
+        sun.visible = false;
+    } else {
+        planets.forEach(planet => planet.obj.visible = true);
+        asteroids.forEach(asteroid => asteroid.visible = true);
+        sun.visible = true;
+    }
+}
+
+// Add event listener to dropdown menu
+viewMenu.addEventListener('change', updateViewMode);
+
+// Initial view mode update
+updateViewMode();
+// Create a div element for the planet name tooltip
+const planetTooltip = document.createElement('div');
+planetTooltip.style.position = 'absolute';
+planetTooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+planetTooltip.style.color = 'white';
+planetTooltip.style.padding = '5px';
+planetTooltip.style.borderRadius = '5px';
+planetTooltip.style.display = 'none';
+planetTooltip.style.pointerEvents = 'none'; // Prevent the tooltip from interfering with mouse events
+document.body.appendChild(planetTooltip);
+
+// Function to show the tooltip
+function showPlanetTooltip(name, x, y) {
+    planetTooltip.innerText = name;
+    planetTooltip.style.left = `${x + 10}px`; // Offset to avoid cursor overlap
+    planetTooltip.style.top = `${y + 10}px`;
+    planetTooltip.style.display = 'block';
+}
+
+// Function to hide the tooltip
+function hidePlanetTooltip() {
+    planetTooltip.style.display = 'none';
+}
+
+// Add event listener for mouse move to detect hovering over planets
+window.addEventListener('mousemove', (event) => {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(planets.map(p => p.mesh));
+
+    if (intersects.length > 0) {
+        const hoveredPlanet = intersects[0].object;
+        const planet = planets.find(p => p.mesh.uuid === hoveredPlanet.uuid);
+        if (planet) {
+            showPlanetTooltip(planet.texture.image.currentSrc.split('/').pop().split('.')[0], event.clientX, event.clientY);
+        }
+    } else {
+        hidePlanetTooltip();
+    }
+});
+// Create a dropdown menu for selecting planet speed
+const speedMenu = document.createElement('select');
+speedMenu.style.position = 'absolute';
+speedMenu.style.top = '50px';
+speedMenu.style.left = '10px';
+speedMenu.style.zIndex = '1000';
+speedMenu.style.padding = '10px';
+speedMenu.style.fontFamily = 'Orbitron, sans-serif';
+speedMenu.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+speedMenu.style.color = 'white';
+speedMenu.style.border = '1px solid white';
+speedMenu.style.borderRadius = '5px';
+speedMenu.style.marginTop = '12.45px';
+
+const optionSlow = document.createElement('option');
+optionSlow.value = 'slow';
+optionSlow.innerText = 'Slow';
+speedMenu.appendChild(optionSlow);
+
+const optionNormal = document.createElement('option');
+optionNormal.value = 'normal';
+optionNormal.innerText = 'Normal';
+speedMenu.appendChild(optionNormal);
+
+const optionFast = document.createElement('option');
+optionFast.value = 'fast';
+optionFast.innerText = 'Fast';
+speedMenu.appendChild(optionFast);
+
+document.body.appendChild(speedMenu);
+
+// Function to update planet speeds based on selected speed mode
+function updateSpeedMode() {
+    const selectedSpeed = speedMenu.value;
+    let speedMultiplier;
+
+    if (selectedSpeed === 'slow') {
+        speedMultiplier = 0.5;
+    } else if (selectedSpeed === 'fast') {
+        speedMultiplier = 2;
+    } else {
+        speedMultiplier = 1;
+    }
+
+    planets.forEach(planet => {
+        planet.speed *= speedMultiplier;
+    });
+}
+
+// Add event listener to dropdown menu
+speedMenu.addEventListener('change', updateSpeedMode);
+
+// Initial speed mode update
+updateSpeedMode();
+
+
+// Create a dropdown menu for selecting planets
+const planetMenu = document.createElement('select');
+planetMenu.style.position = 'absolute';
+planetMenu.style.top = '10px';
+planetMenu.style.right = '10px';
+planetMenu.style.zIndex = '1000';
+planetMenu.style.padding = '10px';
+planetMenu.style.fontFamily = 'Orbitron, sans-serif';
+planetMenu.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+planetMenu.style.color = 'white';
+planetMenu.style.border = '1px solid white';
+planetMenu.style.borderRadius = '5px';
+const placeholderOption = document.createElement('option');
+placeholderOption.value = '';
+placeholderOption.innerText = 'Select a Planet';
+placeholderOption.disabled = true;
+placeholderOption.selected = true;
+planetMenu.appendChild(placeholderOption);
+
+// Populate the dropdown menu with planet options
+planetNames.forEach((planetName, index) => {
+    const option = document.createElement('option');
+    option.value = index;
+    option.innerText = planetName.charAt(0).toUpperCase() + planetName.slice(1);
+    planetMenu.appendChild(option);
+});
+
+document.body.appendChild(planetMenu);
+
+// Function to handle planet selection from the dropdown menu
+function handlePlanetSelection() {
+    const selectedIndex = planetMenu.value;
+    const selectedPlanet = planets[selectedIndex];
+
+    // Set target planet for the camera to follow
+    targetPlanet = selectedPlanet;
+    isFollowingPlanet = true;
+
+    // Disable OrbitControls while following the planet
+    orbit.enabled = false;
+
+    // Show the reset button
+    resetButton.style.display = 'block';
+
+    // Show information box
+    showInfoBox(planetNames[selectedIndex]);
+}
+
+// Add event listener to dropdown menu
+planetMenu.addEventListener('change', handlePlanetSelection);
+
+// Hide the dropdown menus initially
+viewMenu.style.display = 'none';
+speedMenu.style.display = 'none';
+planetMenu.style.display ='none';
+
+// Show dropdown menus when start button is clicked
+startButton.addEventListener('click', function() {
+    startMenu.classList.add('hidden'); 
+    viewMenu.style.display = 'block';
+    speedMenu.style.display = 'block';
+    planetMenu.style.display = 'block';
 });

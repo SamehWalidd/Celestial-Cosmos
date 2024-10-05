@@ -23,7 +23,7 @@ engagement in science.
 
 Best Regards,
 The Celestial Cosmos.
-Sameh,[Seif Deibis](https://github.com/SeifDeibis),[Yara Khedr](https://github.com/Yara-Khedr),[Judy Essam](https://github.com/theJudyEssam),[Lojan Essam](https://github.com/notrickyadams),[Youssef Ahmed](https://github.com/Joeee167).
+Sameh,[Seif Deibis](https://github.com/SeifDeibis), [Yara Khedr](https://github.com/Yara-Khedr), [Judy Essam](https://github.com/theJudyEssam), [Lojan Essam](https://github.com/notrickyadams), [Youssef Ahmed](https://github.com/Joeee167).
 
 [Live Demo](https://solar-system-virid-iota.vercel.app/)
 

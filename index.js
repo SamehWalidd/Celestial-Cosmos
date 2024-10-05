@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from 'jsm/controls/OrbitControls.js';
+import { fetchLimitedData } from "./api.js";
 
 // Load textures
 const textures = [];
@@ -33,6 +34,11 @@ textures.push(
     neptuneTexture,
    asteroidTexture
 );
+
+let asteroidNames = [];
+fetchLimitedData().then(data => {
+    asteroidNames = data;
+});
 
 // Hide start menu
 const startMenu = document.getElementById('start-menu');
@@ -332,6 +338,7 @@ function animate() {
         asteroid.rotation.x += asteroid.r.x;
         asteroid.rotation.y += asteroid.r.y;
         asteroid.rotation.z += asteroid.r.z;
+        
     });
 
     renderer.render(scene, camera);
@@ -500,4 +507,50 @@ window.addEventListener('click', (event) => {
   } else {
     hideInfoBox();
   }
+});
+// Create a div element for the asteroid name tooltip
+const asteroidTooltip = document.createElement('div');
+asteroidTooltip.style.position = 'absolute';
+asteroidTooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+asteroidTooltip.style.color = 'white';
+asteroidTooltip.style.padding = '5px';
+asteroidTooltip.style.borderRadius = '5px';
+asteroidTooltip.style.display = 'none';
+asteroidTooltip.style.pointerEvents = 'none'; // Prevent the tooltip from interfering with mouse events
+document.body.appendChild(asteroidTooltip);
+
+// Function to show the tooltip
+function showAsteroidTooltip(name, x, y) {
+    asteroidTooltip.innerText = name;
+    asteroidTooltip.style.left = `${x + 10}px`; // Offset to avoid cursor overlap
+    asteroidTooltip.style.top = `${y + 10}px`;
+    asteroidTooltip.style.display = 'block';
+}
+
+// Function to hide the tooltip
+function hideAsteroidTooltip() {
+    asteroidTooltip.style.display = 'none';
+}
+
+// Add event listener for mouse move to detect hovering over asteroids
+window.addEventListener('mousemove', (event) => {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(asteroids);
+
+    if (intersects.length > 0) {
+        const hoveredAsteroid = intersects[0].object;
+
+        
+        const asteroidIndex = asteroids.indexOf(hoveredAsteroid);
+        if (asteroidIndex !== -1 && asteroidNames[asteroidIndex]) {
+            showAsteroidTooltip(asteroidNames[asteroidIndex], event.clientX, event.clientY);
+        } else {
+            showAsteroidTooltip('Asteroid', event.clientX, event.clientY);
+        }
+    } else {
+        hideAsteroidTooltip();
+    }
 });
